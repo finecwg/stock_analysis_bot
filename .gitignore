@@ -1,0 +1,13 @@
+# Vim
+*~
+*.sw[p_]
+
+# pycache
+__pycache__/
+
+# environment variable
+.env
+
+# output logs
+investment_recommendation.md
+output.log
