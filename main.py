@@ -4,7 +4,9 @@ import os
 from dotenv import load_dotenv, find_dotenv
 _ = load_dotenv(find_dotenv())
 
-
+GROQ_API_KEY = os.environ['GROQ_API_KEY']
+TELEGRAM_TOKEN = os.environ['TELEGRAM_TOKEN']
+ANTHROPIC_API_KEY = os.environ['ANTHROPIC_API_KEY']
 
 from crewai import Agent, Task, Crew
 from crewai_tools import tool, ScrapeWebsiteTool
@@ -13,6 +15,26 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 
 import yfinance as yf
+
+from groq import Groq
+from langchain_groq import ChatGroq
+from langchain_anthropic import ChatAnthropic
+
+#*-----------------LLM-----------------*#
+
+llm_groq = ChatGroq(
+    temperature=0.2,
+    model_name="llama3-8b-8192",
+    api_key=GROQ_API_KEY
+)
+
+llm_claude = ChatAnthropic(
+    model="claude-3-opus-20240229",
+    temperature=0.2,
+    timeout=None,
+    max_retries=2,
+    api_key=ANTHROPIC_API_KEY
+)
 
 #*-----------------Tools-----------------*#
 
@@ -75,72 +97,89 @@ def insider_transactions(ticker):
 researcher = Agent(
     role = "Researcher",
     goal = """
-        Gather and interpret vast amounts of data to
-        provide a comprehensive overview ofthe sentiment
-        and news surrounding a stock.
+        Gather and analyze comprehensive data from various reliable sources to
+        provide an in-depth overview of the market sentiment, news, and trends
+        surrounding a specific stock. Identify key insights and potential risks
+        or opportunities that could impact the stock's performance.
     """,
     backstory = """
-        You're skilled in gathering and interpreting data
-        from various sources. You read each data source
-        carefully and extract the most important information.
-        Your insights are crucial for making informed
-        investment decisions.
+        You're a highly skilled researcher with a keen eye for detail and a talent
+        for identifying crucial information. You have extensive experience in
+        gathering and interpreting data from a wide range of reliable sources,
+        including financial reports, news articles, and industry publications.
+        Your ability to synthesize complex information and extract actionable
+        insights is invaluable in making well-informed investment decisions.
     """,
     tools = [
         scrape_tool,
         stock_news
     ],
+    llm=llm_groq,
     verbose = True,
 )
 technical_analyst = Agent(
     role = "Technical Analyst",
     goal = """
-        Analyze the movements of a stock and provide
-        insights on trends, entry points, resistance and
-        support levels.
+        Conduct in-depth technical analysis of a stock's price movements, volume,
+        and other relevant metrics to identify trends, patterns, and potential
+        entry or exit points. Provide clear and actionable insights on key support
+        and resistance levels, as well as potential price targets.
     """,
     backstory = """
-        An expert in technical analysis, you're known
-        for your ability to predict stock prices.
-        You provide valuable insights to your customers.
+        As a seasoned technical analyst, you have a proven track record of accurately
+        predicting stock price movements using advanced charting techniques and
+        technical indicators. Your deep understanding of market dynamics and ability
+        to identify critical patterns and trends has earned you a reputation as a
+        go-to expert for valuable insights and trading recommendations.
     """,
     tools = [
         stock_price
     ],
+    llm=llm_groq,
     verbose = True,
 )
 financial_analyst = Agent(
     role = "Financial Analyst",
     goal = """
-        Use financial statements, insider trading data
-        and other metrics to evaluate a stock's financial
-        health and performance.
+        Conduct a thorough analysis of a company's financial statements, ratios, and
+        other relevant metrics to assess its financial health, profitability, and
+        growth potential. Identify key strengths, weaknesses, and risks that could
+        impact the company's stock performance, and provide well-reasoned recommendations. 
     """,
     backstory = """
-        You're a very experienced investment advisor
-        that looks at a company's financial health,
-        market sentiment, and qualitative data to
-        make informed recommendations.
+        As a highly experienced financial analyst, you have a deep understanding of
+        financial statements, accounting principles, and valuation methodologies.
+        You excel at analyzing a company's financial health, identifying trends, and
+        assessing potential risks and opportunities. Your ability to provide clear,
+        well-supported recommendations based on a holistic view of a company's
+        financial position, market sentiment, and qualitative factors is highly valued
+        by your clients.
     """,
     tools = [
         income_stmt,
         balance_sheet,
         insider_transactions
     ],
+    llm=llm_groq,
     verbose = True,
 )
 hedge_fund_manager = Agent(
     role = "Hedge Fund Manager",
     goal = """
-        Manage a portfolio of stocks and make investment
-        decisions to maximize returns using insights
-        from financial analysts and researchers.
+        Synthesize insights from the researcher, technical analyst, and financial analyst
+        to make well-informed, data-driven investment decisions for a portfolio of stocks.
+        Develop and implement effective strategies to maximize returns while managing risk,
+        and clearly communicate your rationale and expectations to clients.
     """,
     backstory = """
-        You're a seasoned hedge fund manager with a proven
-        track record of making profitable investments.
-        You always impress your clients.
+        As a seasoned hedge fund manager with a proven track record of delivering strong
+        returns, you are adept at leveraging insights from a team of expert analysts to
+        make strategic investment decisions. Your ability to synthesize complex information,
+        identify unique opportunities, and adapt to changing market conditions has earned
+        you a reputation as a top-performing fund manager. Your clients trust your judgment
+        and appreciate your clear, transparent communication style.
     """,
+    llm=llm_claude,
     verbose = True,
 )
 
@@ -149,57 +188,76 @@ hedge_fund_manager = Agent(
 
 research = Task(
     description = """
-        Gather and analyze the latest news and
-        market sentiment surrounding
-        {company}'s stock. Provide a summary
-        of the news and any notable shifts in sentiment.
+        Conduct a comprehensive analysis of the latest news, market sentiment, and trends
+        surrounding {company}'s stock. Identify key factors influencing the stock's performance,
+        potential risks, and opportunities. Provide a detailed summary of your findings,
+        including any notable shifts in sentiment or market perception.
     """,
     agent = researcher,
     expected_output = """
-        Your final answer MUST be a detailed
-        summary of the news and market
-        sentiment surrounding the stock.
+        Your final answer MUST be a well-structured, detailed report summarizing the latest
+        news, market sentiment, and trends related to {company}'s stock. The report should
+        include key insights, potential risks, and opportunities, as well as any significant
+        changes in market perception. Use clear headings, subheadings, and bullet points to
+        organize the information effectively.
     """,
 )
 technical_analysis = Task(
     description = """
-        Conduct a technical analysis of the {company}
-        stock price movements and identify
-        key support and resistance levels chart patterns.
+        Perform an in-depth technical analysis of {company}'s stock price movements, volume,
+        and other relevant metrics. Identify key support and resistance levels, chart patterns,
+        and potential entry or exit points. Provide a detailed report of your findings, including
+        price targets, stop-loss levels, and any other relevant technical insights.
     """,
     agent = technical_analyst,
     expected_output = """
-        Your final answer MUST be a report
-        with potential entry points, price targets
-        and any other relevant information.
+        Your final answer MUST be a comprehensive technical analysis report for {company}'s stock.
+        The report should include:
+        1. Key support and resistance levels
+        2. Relevant chart patterns and trend analysis
+        3. Potential entry and exit points, along with price targets and stop-loss levels
+        4. Any other significant technical insights or observations
+        Use charts, graphs, and other visual aids to support your analysis when appropriate.
     """,
 )
 financial_analysis = Task(
     description = """
-        Analyze the {company}'s financial statements,
-        balance sheet, insider trading data
-        and other metrics to evaluate {company}'s
-        financial health and performance.
+        Conduct a thorough analysis of {company}'s financial health and performance using its
+        financial statements, ratios, insider trading data, and other relevant metrics. Assess
+        the company's profitability, growth potential, and risk factors. Provide a detailed
+        report of your findings, highlighting key strengths, weaknesses, and potential impacts
+        on the stock's performance.
     """,
     agent = financial_analyst,
     expected_output = """
-        Your final answer MUST be a report with
-        an overview of {company}'s
-        revenue, earnings, cash flow, and
-        other key financial metrics.
+        Your final answer MUST be a comprehensive financial analysis report for {company}.
+        The report should include:
+        1. An overview of the company's revenue, earnings, cash flow, and other key financial metrics
+        2. Analysis of the company's profitability, liquidity, and solvency ratios
+        3. Assessment of the company's growth potential and market position
+        4. Identification of key strengths, weaknesses, and risk factors
+        5. Discussion of any notable insider trading activity and its potential implications
+        Use tables, charts, and other visual aids to present the data effectively.
     """,
 )
 investment_recommendation = Task(
     description = """
-        Based on the research, technical analysis, and
-        financial analysis reports, provide a detailed
-        investment recommendation for {company} stock.
+        Based on the comprehensive research, technical analysis, and financial analysis reports
+        provided, develop a well-reasoned investment recommendation for {company}'s stock.
+        Consider the potential risks and rewards, as well as the overall market conditions and
+        the company's competitive position. Provide a clear rationale for your recommendation,
+        along with any relevant caveats or considerations.
     """,
     agent = hedge_fund_manager,
     expected_output = """
-        Your final answer MUST be a detailed
-        recommendation to BUY, SELL or HOLD the stock.
-        Provide a detailed rationale for your recommendation.
+        Your final answer MUST be a detailed, well-supported investment recommendation for {company}'s
+        stock. The recommendation should include:
+        1. A clear stance on whether to BUY, SELL, or HOLD the stock
+        2. A thorough rationale for your recommendation, drawing insights from the research,
+        technical analysis, and financial analysis reports
+        3. Discussion of potential risks, rewards, and any relevant market or company-specific factors
+        4. Any necessary caveats, considerations, or time horizons for your recommendation
+        Your recommendation should be well-structured, convincing, and easy to understand for clients.
     """,
     context = [
         research,
@@ -242,7 +300,7 @@ class StockQA:
 
 #*-----------------Telegram Bot-----------------*#
 
-TELEGRAM_TOKEN = os.environ['TELEGRAM_TOKEN']
+
 
 async def start(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text('Hi! Ask me about company stock.')

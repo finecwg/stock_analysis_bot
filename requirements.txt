@@ -21,3 +21,5 @@ python-telegram-bot
 crewai
 'crewai[tools]'
 yfinance
+anthropic
+langchain-anthropic
