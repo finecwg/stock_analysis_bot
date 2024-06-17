@@ -22,10 +22,12 @@ from langchain_anthropic import ChatAnthropic
 
 #*-----------------LLM-----------------*#
 
-llm_groq = ChatGroq(
+llm_groq = ChatAnthropic(
+    model="claude-3-sonnet-20240229",
     temperature=0.2,
-    model_name="llama3-8b-8192",
-    api_key=GROQ_API_KEY
+    timeout=None,
+    max_retries=2,
+    api_key=ANTHROPIC_API_KEY
 )
 
 llm_claude = ChatAnthropic(
@@ -115,6 +117,8 @@ researcher = Agent(
         stock_news
     ],
     llm=llm_groq,
+    max_iter = 5,
+    allow_delegation = False,
     verbose = True,
 )
 technical_analyst = Agent(
@@ -136,6 +140,8 @@ technical_analyst = Agent(
         stock_price
     ],
     llm=llm_groq,
+    max_iter = 5,
+    allow_delegation = False,
     verbose = True,
 )
 financial_analyst = Agent(
@@ -161,6 +167,8 @@ financial_analyst = Agent(
         insider_transactions
     ],
     llm=llm_groq,
+    max_iter = 5,
+    allow_delegation = False,
     verbose = True,
 )
 hedge_fund_manager = Agent(
@@ -180,6 +188,8 @@ hedge_fund_manager = Agent(
         and appreciate your clear, transparent communication style.
     """,
     llm=llm_claude,
+    max_iter = 5,
+    allow_delegation = False,
     verbose = True,
 )
 
