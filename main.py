@@ -262,7 +262,7 @@ investment_recommendation = Task(
     expected_output = """
         Your final answer MUST be a detailed, well-supported investment recommendation for {company}'s
         stock. The recommendation should include:
-        1. A clear stance on whether to BUY, SELL, or HOLD the stock
+        1. A clear stance on whether to BUY, MODERATE BUY, HOLD, MODERATE SELL, or SELL the stock
         2. A thorough rationale for your recommendation, drawing insights from the research,
         technical analysis, and financial analysis reports
         3. Discussion of potential risks, rewards, and any relevant market or company-specific factors
