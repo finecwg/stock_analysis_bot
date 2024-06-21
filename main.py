@@ -22,16 +22,16 @@ from langchain_anthropic import ChatAnthropic
 
 #*-----------------LLM-----------------*#
 
-llm_groq = ChatAnthropic(
-    model="claude-3-sonnet-20240229",
-    temperature=0.2,
-    timeout=None,
-    max_retries=2,
-    api_key=ANTHROPIC_API_KEY
-)
+# llm = ChatAnthropic(
+#     model="claude-3-sonnet-20240229",
+#     temperature=0.2,
+#     timeout=None,
+#     max_retries=2,
+#     api_key=ANTHROPIC_API_KEY
+# )
 
 llm_claude = ChatAnthropic(
-    model="claude-3-opus-20240229",
+    model="claude-3-5-sonnet-20240620",
     temperature=0.2,
     timeout=None,
     max_retries=2,
@@ -116,7 +116,7 @@ researcher = Agent(
         scrape_tool,
         stock_news
     ],
-    llm=llm_groq,
+    llm=llm_claude,
     max_iter = 5,
     allow_delegation = False,
     verbose = True,
@@ -139,7 +139,7 @@ technical_analyst = Agent(
     tools = [
         stock_price
     ],
-    llm=llm_groq,
+    llm=llm_claude,
     max_iter = 5,
     allow_delegation = False,
     verbose = True,
@@ -166,7 +166,7 @@ financial_analyst = Agent(
         balance_sheet,
         insider_transactions
     ],
-    llm=llm_groq,
+    llm=llm_claude,
     max_iter = 5,
     allow_delegation = False,
     verbose = True,
@@ -262,7 +262,7 @@ investment_recommendation = Task(
     expected_output = """
         Your final answer MUST be a detailed, well-supported investment recommendation for {company}'s
         stock. The recommendation should include:
-        1. A clear stance on whether to BUY, MODERATE BUY, HOLD, MODERATE SELL, or SELL the stock
+        1. A clear stance on whether to STRONG BUY, MODERATE BUY, HOLD, MODERATE SELL, or STRONG SELL the stock
         2. A thorough rationale for your recommendation, drawing insights from the research,
         technical analysis, and financial analysis reports
         3. Discussion of potential risks, rewards, and any relevant market or company-specific factors
