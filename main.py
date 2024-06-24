@@ -319,7 +319,13 @@ async def handle_message(update: Update, context: CallbackContext) -> None:
     query = update.message.text
     stock_qa = StockQA()
     response = stock_qa.get_result(query)
-    await update.message.reply_text(response)
+    
+    # Split the response into chunks of 4096 characters (Telegram's message limit)
+    chunks = [response[i:i+4096] for i in range(0, len(response), 4096)]
+    
+    # Send each chunk as a separate message
+    for chunk in chunks:
+        await update.message.reply_text(chunk)
 
 def main() -> None:
     application = Application.builder().token(TELEGRAM_TOKEN).build()

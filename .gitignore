@@ -10,5 +10,4 @@ __pycache__/
 
 # output logs
 investment_recommendation.md
-output.log
-output2.log
+*.log
